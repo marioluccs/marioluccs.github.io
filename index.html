@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Mapa com Rota</title>
+  <style>
+    #map {
+      height: 400px;
+      width: 100%;
+    }
+  </style>
+  <!-- Inclua os arquivos CSS e JS do Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Inclua o arquivo CSS do Leaflet Routing Machine -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <!-- Inclua o arquivo JS do Leaflet Routing Machine -->
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+</head>
+<body>
+  <h1>Mapa com Rota</h1>
+  <div id="map"></div>
+  <p>Distância: <span id="distance"></span></p>
+  <p>Tempo: <span id="time"></span></p>
+  <script>
+    // Função de inicialização do mapa
+    function initMap() {
+      // Criação do mapa
+      var map = L.map('map').setView([0, 0], 8);
+
+      // Adiciona o layer do mapa
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+        maxZoom: 18
+      }).addTo(map);
+
+      // Inicializa o marcador de localização
+      var userMarker;
+
+      // Inicializar o controle de rota
+      var routeControl;
+
+      // Função para atualizar a localização do usuário no mapa
+      function updateUserLocation(position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+
+        // Atualiza a posição do marcador de localização do usuário
+        var userLatLng = L.latLng(latitude, longitude);
+        if (userMarker) {
+          userMarker.setLatLng(userLatLng);
+        } else {
+          // Cria o marcador de localização do usuário pela primeira vez
+          userMarker = L.marker(userLatLng, { icon: createCustomUserIcon('user-icon.png', [25, 41]) }).addTo(map).bindPopup('Sua Localização');
+        }
+
+        // Atualiza a rota
+        if (routeControl) {
+          routeControl.spliceWaypoints(0, 1, userLatLng);
+        }
+
+        // Atualiza a exibição do mapa para acompanhar o movimento do usuário
+        map.setView(userLatLng);
+      }
+
+      // Obter localização atual do usuário e acompanhar as atualizações
+      navigator.geolocation.watchPosition(updateUserLocation);
+
+      // Obter localização atual do usuário
+      navigator.geolocation.getCurrentPosition(function(position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+
+        // Definir ponto inicial como a localização do usuário
+        var startPoint = L.latLng(latitude, longitude);
+        map.setView(startPoint, 8);
+
+        // Criação do marcador para a localização do usuário
+        userMarker = L.marker(startPoint, { icon: createCustomUserIcon('usuario.png', [25, 25]) }).addTo(map).bindPopup('Sua Localização');
+
+        // Criação dos marcadores
+        var marker2 = L.latLng(-22.9068, -43.1729);
+        L.marker(marker2, { icon: createCustomMarkerIcon('motoboy.png', [25, 25]) }).addTo(map).bindPopup('Marcador 2');
+
+        // Remove os marcadores azuis padrão
+        map.eachLayer(function(layer) {
+          if (layer instanceof L.Marker && layer.options.icon.options.iconUrl === 'https://unpkg.com/leaflet/dist/images/marker-icon.png') {
+            map.removeLayer(layer);
+          }
+        });
+
+        // Criação da rota entre os marcadores usando o Mapbox
+        routeControl = L.Routing.control({
+          waypoints: [
+            startPoint,
+            marker2
+          ],
+          routeWhileDragging: true,
+          lineOptions: {
+            styles: [{ color: 'red', opacity: 1, weight: 4 }]
+          },
+          router: L.Routing.mapbox('pk.eyJ1IjoibWFyaW9sdWNjcyIsImEiOiJjbGphY2Rqamwwa2M3M2dtbzRlb3l2cTk4In0.PATcWpdKpGjn-cDh97EMcQ'),
+          createMarker: function(i, wp) {
+            return L.marker(wp.latLng, {
+              icon: (i === 0 ? createCustomUserIcon('usuario.png', [25, 25]) : createCustomMarkerIcon('motoboy.png', [25, 25]))
+            });
+          }
+        }).addTo(map);
+
+        routeControl.on('routesfound', function(e) {
+          var routes = e.routes;
+          var summary = routes[0].summary;
+          // Atualiza a distância e o tempo na interface do usuário
+          document.getElementById('distance').textContent = (summary.totalDistance / 1000).toFixed(2) + ' km';
+          document.getElementById('time').textContent = (summary.totalTime / 60).toFixed(2) + ' minutos';
+        });
+      });
+    }
+
+    // Chama a função de inicialização quando o documento estiver pronto
+    document.addEventListener('DOMContentLoaded', initMap);
+
+    // Função para criar um ícone personalizado para o marcador de localização do usuário
+    function createCustomUserIcon(iconUrl, iconSize) {
+      return L.icon({
+        iconUrl: iconUrl,
+        iconSize: iconSize,
+        iconAnchor: [iconSize[0] / 2, iconSize[1]],
+        popupAnchor: [0, -iconSize[1]]
+      });
+    }
+
+    // Função para criar um ícone personalizado para o marcador "Marcador 2"
+    function createCustomMarkerIcon(iconUrl, iconSize) {
+      return L.icon({
+        iconUrl: iconUrl,
+        iconSize: iconSize,
+        iconAnchor: [iconSize[0] / 2, iconSize[1]],
+        popupAnchor: [0, -iconSize[1]]
+      });
+    }
+  </script>
+</body>
+</html>
