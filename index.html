@@ -4,8 +4,21 @@
   <title>Mapa com Rota</title>
   <style>
     #map {
-      height: 400px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
       width: 100%;
+      z-index: -1;
+    }
+
+    #overlay {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-size: 16px;
+      z-index: 1;
     }
   </style>
   <!-- Inclua os arquivos CSS e JS do Leaflet -->
@@ -17,10 +30,11 @@
   <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 </head>
 <body>
-  <h1>Mapa com Rota</h1>
   <div id="map"></div>
-  <p>Distância: <span id="distance"></span></p>
-  <p>Tempo: <span id="time"></span></p>
+  <div id="overlay">
+    <p>Distância: <span id="distance"></span></p>
+    <p>Tempo: <span id="time"></span></p>
+  </div>
   <script>
     // Função de inicialização do mapa
     function initMap() {
