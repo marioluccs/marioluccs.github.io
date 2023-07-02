@@ -153,12 +153,15 @@
         });
 
         // Adiciona o controle de geocodificação
-        var geocoder = L.Control.geocoder().addTo(map);
+        var geocoder = L.Control.geocoder({
+          geocoder: L.Control.Geocoder.nominatim(),
+          defaultMarkGeocode: false
+        }).addTo(map);
 
         // Captura o evento de sugestão selecionada
-        geocoder.on('select', function(e) {
-          var location = e.feature.geometry.coordinates;
-          var destination = L.latLng(location[1], location[0]);
+        geocoder.on('markgeocode', function(e) {
+          var location = e.geocode.center;
+          var destination = L.latLng(location.lat, location.lng);
 
           // Adiciona o marcador do destino
           L.marker(destination, { icon: createCustomMarkerIcon('destination-icon.png', [25, 41]) }).addTo(map).bindPopup('Destino');
@@ -168,7 +171,7 @@
         });
 
         // Captura o evento de limpar a seleção
-        geocoder.on('unselect', function(e) {
+        geocoder.on('unmarkgeocode', function(e) {
           // Remove o marcador do destino
           map.eachLayer(function(layer) {
             if (layer instanceof L.Marker && layer.options.icon.options.iconUrl === 'destination-icon.png') {
