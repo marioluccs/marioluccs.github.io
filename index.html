@@ -81,56 +81,60 @@
         // Criação do marcador para a localização do usuário
         var userMarker = L.marker(startPoint, { icon: createCustomUserIcon('usuario.png', [25, 25]) }).addTo(map).bindPopup('Sua Localização');
 
-        // Conectar ao Firebase Realtime Database
-        var database = firebase.database();
+        // Conectar ao Firebase Firestore
+        var db = firebase.firestore();
 
-        // Obter a referência da corrida com base no ID fornecido na URL
+        // Obter o ID da corrida a partir da URL
         var id = getUrlParameter('id');
-        var corridaRef = database.ref('corridas/' + id);
+
+        // Obter a referência da corrida com base no ID
+        var corridaRef = db.collection('corridas').doc(id);
 
         // Monitorar alterações na localização do Marcador 2
-        corridaRef.child('motorista').on('value', function(snapshot) {
-          var motorista = snapshot.val();
+        corridaRef.onSnapshot(function(doc) {
+          if (doc.exists) {
+            var motorista = doc.data().motorista;
 
-          // Verificar se o motorista existe
-          if (motorista) {
-            var latitudeMarker2 = motorista.latitude;
-            var longitudeMarker2 = motorista.longitude;
-            var marker2 = L.latLng(latitudeMarker2, longitudeMarker2);
+            // Verificar se o motorista existe
+            if (motorista) {
+              var latitudeMarker2 = motorista.latitude;
+              var longitudeMarker2 = motorista.longitude;
+              var marker2 = L.latLng(latitudeMarker2, longitudeMarker2);
 
-            // Remover marcador anterior, se existir
-            if (routeControl) {
-              map.removeControl(routeControl);
-            }
-
-            // Criação da rota entre os marcadores usando o Mapbox
-            routeControl = L.Routing.control({
-              waypoints: [
-                startPoint,
-                marker2
-              ],
-              routeWhileDragging: true,
-              lineOptions: {
-                styles: [{ color: 'red', opacity: 1, weight: 4 }]
-              },
-              router: L.Routing.mapbox('pk.eyJ1IjoibWFyaW9sdWNjcyIsImEiOiJjbGphY2Rqamwwa2M3M2dtbzRlb3l2cTk4In0.PATcWpdKpGjn-cDh97EMcQ'),
-              createMarker: function(i, wp) {
-                return L.marker(wp.latLng, {
-                  icon: (i === 0 ? createCustomUserIcon('usuario.png', [25, 25]) : createCustomMarkerIcon('motoboy.png', [25, 25]))
-                });
+              // Remover marcador anterior, se existir
+              if (routeControl) {
+                map.removeControl(routeControl);
               }
-            }).addTo(map);
 
-            routeControl.on('routesfound', function(e) {
-              var routes = e.routes;
-              var summary = routes[0].summary;
-              // Atualiza a distância e o tempo na interface do usuário
-              document.getElementById('distance').textContent = (summary.totalDistance / 1000).toFixed(2) + ' km';
-              document.getElementById('time').textContent = (summary.totalTime / 60).toFixed(2) + ' minutos';
-            });
+              // Criação da rota entre os marcadores usando o Mapbox
+              routeControl = L.Routing.control({
+                waypoints: [
+                  startPoint,
+                  marker2
+                ],
+                routeWhileDragging: true,
+                lineOptions: {
+                  styles: [{ color: 'red', opacity: 1, weight: 4 }]
+                },
+                router: L.Routing.mapbox('pk.eyJ1IjoibWFyaW9sdWNjcyIsImEiOiJjbGphY2Rqamwwa2M3M2dtbzRlb3l2cTk4In0.PATcWpdKpGjn-cDh97EMcQ'),
+                createMarker: function(i, wp) {
+                  return L.marker(wp.latLng, {
+                    icon: (i === 0 ? createCustomUserIcon('usuario.png', [25, 25]) : createCustomMarkerIcon('motoboy.png', [25, 25]))
+                  });
+                }
+              }).addTo(map);
 
-            // Adicionar marcador do Marcador 2
-            L.marker(marker2, { icon: createCustomMarkerIcon('motoboy.png', [25, 25]) }).addTo(map).bindPopup('Marcador 2');
+              routeControl.on('routesfound', function(e) {
+                var routes = e.routes;
+                var summary = routes[0].summary;
+                // Atualiza a distância e o tempo na interface do usuário
+                document.getElementById('distance').textContent = (summary.totalDistance / 1000).toFixed(2) + ' km';
+                document.getElementById('time').textContent = (summary.totalTime / 60).toFixed(2) + ' minutos';
+              });
+
+              // Adicionar marcador do Marcador 2
+              L.marker(marker2, { icon: createCustomMarkerIcon('motoboy.png', [25, 25]) }).addTo(map).bindPopup('Marcador 2');
+            }
           }
         });
       });
@@ -168,7 +172,6 @@
     }
   </script>
   <script src="https://www.gstatic.com/firebasejs/8.7.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.7.1/firebase-database.js"></script>
-
+  <script src="https://www.gstatic.com/firebasejs/8.7.1/firebase-firestore.js"></script>
 </body>
 </html>
