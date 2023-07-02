@@ -16,9 +16,25 @@
       position: fixed;
       top: 10px;
       left: 10px;
-      color: white;
-      font-size: 16px;
       z-index: 1;
+    }
+
+    .card {
+      background-color: white;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .input-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .input-container input {
+      flex: 1;
+      margin-left: 10px;
+      padding: 5px;
     }
   </style>
   <!-- Inclua os arquivos CSS e JS do Leaflet -->
@@ -34,9 +50,14 @@
 <body>
   <div id="map"></div>
   <div id="overlay">
-    <input type="text" id="search-input" placeholder="Digite o local desejado" />
-    <p>Distância: <span id="distance"></span></p>
-    <p>Tempo: <span id="time"></span></p>
+    <div class="card">
+      <div class="input-container">
+        <label for="search-input">Digite o local desejado:</label>
+        <input type="text" id="search-input" placeholder="Digite o local desejado" />
+      </div>
+      <p>Distância: <span id="distance"></span></p>
+      <p>Tempo: <span id="time"></span></p>
+    </div>
   </div>
   <script>
     // Função de inicialização do mapa
