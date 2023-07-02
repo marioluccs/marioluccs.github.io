@@ -28,10 +28,13 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
   <!-- Inclua o arquivo JS do Leaflet Routing Machine -->
   <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+  <!-- Inclua o arquivo JS do Leaflet Control Geocoder -->
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 </head>
 <body>
   <div id="map"></div>
   <div id="overlay">
+    <input type="text" id="search-input" placeholder="Digite o local desejado" />
     <p>Distância: <span id="distance"></span></p>
     <p>Tempo: <span id="time"></span></p>
   </div>
@@ -126,6 +129,34 @@
           // Atualiza a distância e o tempo na interface do usuário
           document.getElementById('distance').textContent = (summary.totalDistance / 1000).toFixed(2) + ' km';
           document.getElementById('time').textContent = (summary.totalTime / 60).toFixed(2) + ' minutos';
+        });
+
+        // Adiciona o controle de geocodificação
+        var geocoder = L.Control.geocoder().addTo(map);
+
+        // Captura o evento de sugestão selecionada
+        geocoder.on('select', function(e) {
+          var location = e.feature.geometry.coordinates;
+          var destination = L.latLng(location[1], location[0]);
+
+          // Adiciona o marcador do destino
+          L.marker(destination, { icon: createCustomMarkerIcon('destination-icon.png', [25, 41]) }).addTo(map).bindPopup('Destino');
+
+          // Atualiza a rota
+          routeControl.spliceWaypoints(routeControl.getWaypoints().length - 1, 1, destination);
+        });
+
+        // Captura o evento de limpar a seleção
+        geocoder.on('unselect', function(e) {
+          // Remove o marcador do destino
+          map.eachLayer(function(layer) {
+            if (layer instanceof L.Marker && layer.options.icon.options.iconUrl === 'destination-icon.png') {
+              map.removeLayer(layer);
+            }
+          });
+
+          // Atualiza a rota removendo o destino
+          routeControl.spliceWaypoints(routeControl.getWaypoints().length - 1, 1);
         });
       });
     }
